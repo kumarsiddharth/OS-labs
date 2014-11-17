@@ -24,7 +24,7 @@ main(){
 	if(childid > 0){
 		printf("I'm parent. pid : %d\n", getpid());
 		
-		// Close writing to pipe
+		// Close write pipe
 		close(fd[1]);
 		
 		// Read from pipe
@@ -32,6 +32,9 @@ main(){
 		
 		// Print the data read from pipe
 		printf("Read from pipe: %s\n", buffer);
+
+		// Close read pipe
+		close(fd[0]);
 
 		// Wait for child
 		wait(&childec);
@@ -42,11 +45,14 @@ main(){
 	else if(childid == 0){
 		printf("I'm child. pid : %d\n", getpid());
 		
-		// Close reading from pipe
+		// Close read pipe
 		close(fd[0]);
 
 		// Write to pipe
 		write(fd[1], SAMPLE_TEXT, sizeof(SAMPLE_TEXT));
+
+		// Close write pipe
+		close(fd[1]);
 	}
 
 	// Fork failed so, terminate
