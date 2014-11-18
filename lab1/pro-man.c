@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(){
 	pid_t childid;
@@ -28,7 +29,7 @@ int main(){
 
 	// Fork failed so, terminate
 	else{
-		printf("Failed to fork. Error code : %d \n", errno);
+		printf("Failed to fork. Error : %s \n", strerror(errno));
 		exit(0);
 	}
 	

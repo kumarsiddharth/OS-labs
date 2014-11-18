@@ -7,6 +7,7 @@
 #include <mqueue.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define MAX_BUFFER 1024
 #define SAMPLE_TEXT "YOLO!"
@@ -14,7 +15,7 @@
 
 #define err_check(status, msg)\
 	if(!(status))\
-		fprintf(stderr, "Error %s. Error code : %d \n", msg, errno);\
+		fprintf(stderr, "Error %s. Error : %s \n", msg, strerror(errno));\
 
 
 int main(){
