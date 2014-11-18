@@ -12,7 +12,7 @@
 	if(!(status))\
 		fprintf(stderr, "Error %s. Error code : %d \n", msg, errno);\
 
-main(){
+int main(){
 	pid_t childid;
 	int childec;
 	int fd[2];
@@ -65,5 +65,7 @@ main(){
 		perror("fork");
 		exit(0);
 	}
-
+	
+	return 0;
 }
+
