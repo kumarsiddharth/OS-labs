@@ -1,3 +1,21 @@
+Team
+=====
+Team size: 2
+
+<br/><br/>
+
+Member 1
+Praveen Kumar Pendyala
+2919474
+praveenkumar.pendyala@stud.tu-darmstadt.de
+
+<br/><br/>
+
+Member 2
+Ankush Chikhale
+2973449
+ankush.chikhale@stud.tu-darmstadt.de
+
 Note
 ======
 Each solution works independently as a single file.
