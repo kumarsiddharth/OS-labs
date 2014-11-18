@@ -26,7 +26,7 @@ main(){
 	char *buffer;
 	
 	// Set attributes
-	attr.mq_flags = 0;  
+	attr.mq_flags = 0; 	// Blocking queue  
 	attr.mq_maxmsg = 10;  
 	attr.mq_msgsize = MAX_BUFFER;  
 	attr.mq_curmsgs = 0;  
@@ -55,12 +55,19 @@ main(){
 		// Read from queue
 		err_check(0 <= mq_receive(mqd, buffer, attr.mq_msgsize, NULL), "reading queue");	
 
-		// Print the read data
+		// Print the read data and free memory
 		printf("Data received : %s \n", buffer);
+		free(buffer);
+		
+		// Close the queue
+		err_check(0 <= mq_close(mqd), "closing queue");
 
 		// Wait for child
 		wait(&childec);
 		printf("Waited for child, exit code : %d\n", childec);
+		
+		// Unlink queue
+		err_check(0 <= mq_unlink(QNAME), "unlinking queue");		
 	}
 
 	// Child execution
@@ -73,6 +80,9 @@ main(){
 		
 		// Write to queue
 		err_check(0 <= mq_send(mqd, SAMPLE_TEXT, sizeof(SAMPLE_TEXT), 1), "writing queue");
+		
+		// Close the queue
+		err_check(0 <= mq_close(mqd), "closing queue");
 	}
 
 	// Fork failed so, terminate
