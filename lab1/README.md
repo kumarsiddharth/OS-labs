@@ -7,11 +7,14 @@ Compile and execute
 No rocket science in compile and exec commands. Just the usual command with Wall flag.
 
 For pro-man.c, ipc-pipe.c
-```gcc -Wall -o file.o file.c```
+```
+gcc -Wall -o file.o file.c
+```
+
 
 For the rest
 ```
-gcc -Wall -o file.o file.c -lrt```
+gcc -Wall -o file.o file.c -lrt
 ```
 
 Disclaimer
