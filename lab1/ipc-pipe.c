@@ -8,6 +8,10 @@
 #define MAX_BUFFER 1024
 #define SAMPLE_TEXT "YOLO!"
 
+#define err_check(status, msg)\
+	if(!(status))\
+		fprintf(stderr, "Error %s. Error code : %d \n", msg, errno);\
+
 main(){
 	pid_t childid;
 	int childec;
@@ -25,16 +29,16 @@ main(){
 		printf("I'm parent. pid : %d\n", getpid());
 		
 		// Close write pipe
-		close(fd[1]);
+		err_check(0 == close(fd[1]), "closing pipe");
 		
 		// Read from pipe
-		read(fd[0], buffer, MAX_BUFFER);
+		err_check(0 <= read(fd[0], buffer, MAX_BUFFER), "reading pipe");
 		
 		// Print the data read from pipe
 		printf("Read from pipe: %s\n", buffer);
 
 		// Close read pipe
-		close(fd[0]);
+		err_check(0 == close(fd[0]), "closing pipe");
 
 		// Wait for child
 		wait(&childec);
@@ -46,13 +50,13 @@ main(){
 		printf("I'm child. pid : %d\n", getpid());
 		
 		// Close read pipe
-		close(fd[0]);
+		err_check(0 == close(fd[0]), "closing pipe");
 
 		// Write to pipe
-		write(fd[1], SAMPLE_TEXT, sizeof(SAMPLE_TEXT));
+		err_check(0 <= write(fd[1], SAMPLE_TEXT, sizeof(SAMPLE_TEXT)), "writing pipe");
 
 		// Close write pipe
-		close(fd[1]);
+		err_check(0 == close(fd[1]), "closing pipe");
 	}
 
 	// Fork failed so, terminate
@@ -63,5 +67,3 @@ main(){
 	}
 
 }
-
-
