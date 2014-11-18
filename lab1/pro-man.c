@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-main(){
+int main(){
 	pid_t childid;
 	int childec;
 	
@@ -31,5 +31,7 @@ main(){
 		printf("Failed to fork. Error code : %d \n", errno);
 		exit(0);
 	}
-
+	
+	return 0;
 }
+
