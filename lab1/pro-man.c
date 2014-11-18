@@ -28,8 +28,7 @@ main(){
 
 	// Fork failed so, terminate
 	else{
-		printf("Failed to fork. Error! \n");
-		perror("fork");
+		printf("Failed to fork. Error code : %d \n", errno);
 		exit(0);
 	}
 
