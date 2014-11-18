@@ -23,7 +23,7 @@ main(){
 	mqd_t mqd;
 	struct mq_attr attr;
 	ssize_t bytes_read;
-	char buffer[MAX_BUFFER + 1];
+	char *buffer;
 	
 	// Set attributes
 	attr.mq_flags = 0;  
@@ -46,8 +46,14 @@ main(){
 		mqd = mq_open(QNAME, O_RDONLY);
 		err_check(0 <= mqd, "opening queue");
 		
+		// Get attributes
+		err_check(0 <= mq_getattr(mqd, &attr), "reading attributes");
+		
+		//Allocate buffer
+		buffer = (char *) malloc(attr.mq_msgsize + 1);
+		
 		// Read from queue
-		err_check(0 <= mq_receive(mqd, buffer, MAX_BUFFER, NULL), "reading queue");	
+		err_check(0 <= mq_receive(mqd, buffer, attr.mq_msgsize, NULL), "reading queue");	
 
 		// Print the read data
 		printf("Data received : %s \n", buffer);
