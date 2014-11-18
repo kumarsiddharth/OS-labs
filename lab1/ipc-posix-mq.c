@@ -17,12 +17,11 @@
 		fprintf(stderr, "Error %s. Error code : %d \n", msg, errno);\
 
 
-main(){
+int main(){
 	pid_t childid;
 	int childec;
 	mqd_t mqd;
 	struct mq_attr attr;
-	ssize_t bytes_read;
 	char *buffer;
 	
 	// Set attributes
@@ -89,6 +88,7 @@ main(){
 	else{
 		printf("Failed to fork. Error code : %d \n", errno);
 	}
-
+	
+	return 0;
 }
 
