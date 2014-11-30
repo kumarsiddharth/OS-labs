@@ -55,6 +55,10 @@ int main(){
 		// Read from queue
 		err_check(0 <= mq_receive(mqd, buffer, attr.mq_msgsize, NULL), "reading queue");	
 
+		// Wait until child finishes write to queue
+		wait(&childec);
+		printf("waited for child, exit code : %d\n", childec);
+
 		// Print the read data and free memory
 		printf("Data received : %s \n", buffer);
 		free(buffer);
@@ -62,10 +66,6 @@ int main(){
 		// Close the queue
 		err_check(0 <= mq_close(mqd), "closing queue");
 
-		// Wait for child
-		wait(&childec);
-		printf("Waited for child, exit code : %d\n", childec);
-		
 		// Unlink queue
 		err_check(0 <= mq_unlink(QNAME), "unlinking queue");		
 	}
