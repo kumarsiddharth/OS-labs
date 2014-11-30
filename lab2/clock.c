@@ -14,33 +14,53 @@ MODULE_AUTHOR("Praveen Kumar Pendyala");
 MODULE_DESCRIPTION("Lab 2 Solution Clock driver");
 MODULE_LICENSE("GPL");
 
+// To trigger end of file while reading
+int eof = 0;
+
 // Read clock call
-static ssize_t clock_read(struct file *file, char *buf, size_t count,
+static ssize_t clock_read(struct file *file, char *user_buf, size_t count,
 						loff_t *ppos)
 {
 	struct timeval *tv;
+	char *time;
+	
+	// Signal eof if previous read was done.
+	if(eof == 1)
+		return 0;
+	
 	tv = kmalloc(sizeof(*tv), GFP_KERNEL);
+	time = kmalloc(sizeof(*time) * 50, GFP_KERNEL);
 	
 	// Get current time
 	do_gettimeofday(tv);
+	sprintf(time, "time:%ld\n", tv->tv_sec);
 	
+	// Debug time in kernel log
 	printk("The time is: %ld\n", tv->tv_sec);
 	
+	// Copy to userspace
+	copy_to_user(user_buf, time, 50);
+	
+	// Set eof to 1 for next read's
+	eof = 1;
+	
 	// Format time
-	return 0;
+	return 50;
 }
 
 // Write clock call - unsupported
 static ssize_t clock_write( struct file *file, const char *buf, size_t count,
 						 loff_t *ppos )			
 {
-	printk("Operation not supported");
+	printk("Clock write operation not supported\n");
 	return -EPERM;
 }
 
 // Open device call
 static int clock_open(struct inode * inode, struct file * file)
 {
+	printk("Clock file opened!\n");
+	eof = 0;
 	return 0;	
 }
 
