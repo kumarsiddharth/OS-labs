@@ -6,7 +6,9 @@
 #include <linux/time.h>		/* for kernel time functions */
 #include <linux/slab.h>		/* For kmalloc */
 
-#define CDEV_FILE_NAME "clock"
+#define CLOCK_PROC_FILE "clock"
+
+// Time formatting related
 #define YEAR_LEN 4
 #define MON_DAY_LEN 2
 #define SEP_LEN 1
@@ -25,12 +27,12 @@ int eof = 0;
  Conversion routine credits: Stack overflow
 ********************************************/
 struct date_time_t {
-	int second;
-	int minute;
-	int hour;
-	int day;
-	int month;
-	int year;
+	unsigned int second;
+	unsigned int minute;
+	unsigned int hour;
+	unsigned int day;
+	unsigned int month;
+	unsigned int year;
 };
 
 static unsigned short days[4][12] =
@@ -99,8 +101,13 @@ static ssize_t clock_read(struct file *file, char *user_buf, size_t count,
 	// Copy to userspace
 	copy_to_user(user_buf, ts, TS_LEN);
 	
-	// Set eof to 1 for next read's
+	// Set eof to 1 for next reads
 	eof = 1;
+	
+	// Because we don't want memory leaks after all
+	kfree(tv);
+	kfree(dt);
+	kfree(ts);
 	
 	// Format time
 	return TS_LEN;
@@ -130,7 +137,6 @@ static int clock_release(struct inode * inode, struct file * file)
 }
 
 // clocks' file operations structure
-
 static struct file_operations clock_fops = {
 	.owner =	THIS_MODULE,
 	.read =		clock_read,
@@ -142,14 +148,14 @@ static struct file_operations clock_fops = {
 // Initialize clock device on insmod
 static int __init clock_device_init(void)
 {	
-	proc_create(CDEV_FILE_NAME, 0, NULL, &clock_fops);
+	proc_create(CLOCK_PROC_FILE, 0, NULL, &clock_fops);
 	return 0;
 }
 
 // Remove clock device on rmmod
 static void __exit clock_device_cleanup(void)
 {
-	remove_proc_entry(CDEV_FILE_NAME, NULL);
+	remove_proc_entry(CLOCK_PROC_FILE, NULL);
 }
 
 module_init(clock_device_init);
