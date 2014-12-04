@@ -3,7 +3,6 @@
 #include <linux/proc_fs.h>	/* Necessary because we use the proc fs */
 #include <asm/uaccess.h>	/* for copy_from_user */
 #include <linux/errno.h>	/* Error numbers and errno */
-#include <linux/time.h>		/* for kernel time functions */
 #include <linux/slab.h>		/* For kmalloc */
 #include <linux/wait.h>		/* Sleep - wakeup */
 #include <linux/sched.h>	/* Is a dependency for wait.h */
@@ -28,7 +27,7 @@ MODULE_LICENSE("GPL");
 static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 						loff_t *ppos)
 {
-	// Get minor number to see if operation is supported
+	// Get minor number to see if read operation is supported
 	int minor = MINOR(file->f_dentry->d_inode->i_rdev);
 	int bytes_read = 0;
 	int fifo;
@@ -65,7 +64,7 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 						 loff_t *ppos )			
 {
-	// Get minor number to see if operation is supported
+	// Get minor number to see if write operation is supported
 	int minor = MINOR(file->f_dentry->d_inode->i_rdev);
 	int bytes_written = 0;
 	int fifo;
@@ -96,12 +95,13 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		// Buffer full. Sleep and wait for reader.
 		else{
 			printk(KERN_INFO "Writer %d sleeping\n", minor);
-			wait_event_interruptible(wq, curpos[fifo] != BUFFER_MAX_SIZE);
+			wait_event_interruptible(wq, 
+					curpos[fifo] != BUFFER_MAX_SIZE);
 		}
 		
 	}
 	
-	// Signal writer done
+	// Signal writer done and wake up any readers waiting on this
 	running[minor] = 0;
 	
 	// Wake up the reader, if any.
