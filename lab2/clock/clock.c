@@ -5,6 +5,7 @@
 #include <linux/errno.h>	/* Error numbers and errno */
 #include <linux/time.h>		/* for kernel time functions */
 #include <linux/slab.h>		/* For kmalloc */
+#include <linux/rtc.h>		/* For rtc time function */
 
 #define CLOCK_PROC_FILE "clock"
 
@@ -22,94 +23,40 @@ MODULE_LICENSE("GPL");
 // To trigger end of file while reading
 int eof = 0;
 
-/*********************************************
- For Epoch to datetime conversion
- Conversion routine credits: Stack overflow
-********************************************/
-struct date_time_t {
-	unsigned int second;
-	unsigned int minute;
-	unsigned int hour;
-	unsigned int day;
-	unsigned int month;
-	unsigned int year;
-};
-
-static unsigned short days[4][12] =
-	{
-	    {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
-	    { 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},
-	    { 731, 762, 790, 821, 851, 882, 912, 943, 974,1004,1035,1065},
-	    {1096,1127,1155,1186,1216,1247,1277,1308,1339,1369,1400,1430},
-	};
-
-// Epoch to datetime conversion
-static void epoch_to_date_time(struct date_time_t* date_time, unsigned int epoch)
-{
-	date_time->second = epoch%60; epoch /= 60;
-	date_time->minute = epoch%60; epoch /= 60;
-	date_time->hour   = epoch%24; epoch /= 24;
-
-	unsigned int years = epoch/(365*4+1)*4; epoch %= 365*4+1;
-
-	unsigned int year;
-	for (year=3; year>0; year--)
-	{
-		if (epoch >= days[year][0])
-			break;
-	}
-
-	unsigned int month;
-	for (month=11; month>0; month--){
-		if (epoch >= days[year][month])
-			break;
-	}
-
-	date_time->year  = years+year;
-	date_time->month = month+1;
-	date_time->day   = epoch-days[year][month]+1;
-}
-
-/**********************************************
- End of Epoch to datetime conversion
-**********************************************/
-
 // Read clock call
 static ssize_t clock_read(struct file *file, char *user_buf, size_t count,
 						loff_t *ppos)
 {
-	struct timeval *tv;
-	struct date_time_t *dt;
 	char *ts;
+	struct timeval time;
+	unsigned long local_time;
+	struct rtc_time tm;
 	
 	// Signal eof if previous read was done.
 	if(eof == 1)
 		return 0;
-	
-	tv = kmalloc(sizeof(*tv), GFP_KERNEL);
-	dt = kmalloc(sizeof(*dt), GFP_KERNEL);
+		
 	ts = kmalloc(sizeof(*ts) * TS_LEN, GFP_KERNEL);
 	
 	// Get current time
-	do_gettimeofday(tv);
-	epoch_to_date_time(dt, tv->tv_sec);
+	do_gettimeofday(&time);
+	
+	// Covert to local time
+	local_time = (u32)(time.tv_sec - (sys_tz.tz_minuteswest * 60));
+	rtc_time_to_tm(local_time, &tm);
 	
 	// Format the time. +1 for hours is to get to EST time zone
-	sprintf(ts, "%d-%d-%d %02d:%02d:%02d\n\0", dt->day, dt->month, 
-		dt->year + 1970, dt->hour + 1, dt->minute, dt->second);
+	sprintf(ts, "%04d-%02d-%02d %02d:%02d:%02d\n", tm.tm_year + 1900, 
+			tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, 
+			tm.tm_sec);
 	
 	// Copy to userspace
 	copy_to_user(user_buf, ts, TS_LEN);
 	
-	// Set eof to 1 for next reads
+	// Set eof to 1 for next reads and free memory
 	eof = 1;
-	
-	// Because we don't want memory leaks after all
-	kfree(tv);
-	kfree(dt);
 	kfree(ts);
 	
-	// Format time
 	return TS_LEN;
 }
 
