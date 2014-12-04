@@ -35,7 +35,7 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	}
 	
 	// Identify the fifo number
-	fifo = (minor-1)%2;
+	fifo = minor/2;
 	
 	printk(KERN_INFO "Curpos is %d\n", curpos[fifo]);
 	
@@ -48,8 +48,6 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	// Fifo has data. Read it.
 	else{
 		bytes_read = curpos[fifo];
-		printk(KERN_INFO "Buffer is %s \n", buffer[fifo][0]);
-		printk(KERN_INFO "Buffer iss %s \n", buffer[fifo]);
 		copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
 		curpos[fifo] = 0;
 		return bytes_read;
@@ -74,7 +72,7 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	printk(KERN_INFO "Count is %d\n", count);
 	
 	// Identify the fifo number
-	fifo = minor%2;
+	fifo = minor/2;
 	
 	// Signal writer running
 	running[minor] = 1;
@@ -83,13 +81,12 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	
 		// Check if buffer is full
 		if(curpos[fifo] != BUFFER_MAX_SIZE){
-			printk(KERN_INFO "BW: %d CNT: %d\ buf %c \n", bytes_written, count, *buf);
 			buffer[fifo][curpos[fifo]] = *buf++;
 			curpos[fifo]++;
 			bytes_written++;
 		} 
 		
-		// Buffer full. Sleep and wait for a reader.
+		// Buffer full. Sleep and wait for reader.
 		else{
 			printk(KERN_INFO "Writer %d sleeping\n", minor);
 		}
