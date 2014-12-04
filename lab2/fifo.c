@@ -6,11 +6,15 @@
 #include <linux/time.h>		/* for kernel time functions */
 #include <linux/slab.h>		/* For kmalloc */
 #include <linux/wait.h>		/* Sleep - wakeup */
+#include <linux/sched.h>	/* Is a dependency for wait.h */
 
 #define FIFO_NAME "fifo"
 #define FIFO_MAJOR_NUM 240
 #define BUFFER_MAX_SIZE 10
 #define FIFO_MAX_COUNT 4
+
+// Sleep wakeup queue
+static DECLARE_WAIT_QUEUE_HEAD(wq);
 
 char buffer[FIFO_MAX_COUNT/2][BUFFER_MAX_SIZE];
 int running[FIFO_MAX_COUNT];
@@ -49,6 +53,10 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 		bytes_read = curpos[fifo];
 		copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
 		curpos[fifo] = 0;
+		
+		// Wake up any waiting processes
+		wake_up_interruptible(&wq);
+		
 		return bytes_read;
 	}
 }
@@ -88,6 +96,7 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		// Buffer full. Sleep and wait for reader.
 		else{
 			printk(KERN_INFO "Writer %d sleeping\n", minor);
+			wait_event_interruptible(wq, curpos[fifo] != BUFFER_MAX_SIZE);
 		}
 		
 	}
