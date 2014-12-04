@@ -5,6 +5,7 @@
 #include <linux/errno.h>	/* Error numbers and errno */
 #include <linux/time.h>		/* for kernel time functions */
 #include <linux/slab.h>		/* For kmalloc */
+#include <linux/wait.h>		/* Sleep - wakeup */
 
 #define FIFO_NAME "fifo"
 #define FIFO_MAJOR_NUM 240
@@ -36,8 +37,6 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	
 	// Identify the fifo number
 	fifo = minor/2;
-	
-	printk(KERN_INFO "Curpos is %d\n", curpos[fifo]);
 	
 	// Check if fifo is empty
 	if(curpos[fifo] == 0){
@@ -92,6 +91,11 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		}
 		
 	}
+	
+	// Signal writer done
+	running[minor] = 0;
+	
+	// Wake up the reader, if any.
 	
 	printk("FIFO write called\n");
 	return bytes_written;
