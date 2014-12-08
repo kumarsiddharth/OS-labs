@@ -59,7 +59,6 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	}
 	
 	// Fifo has data. Read it.
-	printk(KERN_INFO "Reader read %d bytes\n", curpos[fifo]);
 	bytes_read = curpos[fifo];
 	copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
 	curpos[fifo] = 0;
@@ -85,20 +84,13 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		return -EACCES;
 	}
 	
-	printk(KERN_INFO "Count is %d\n", count);
-	
 	// Identify the fifo number
 	fifo = minor/2;
 	
 	while(bytes_written != count){
 	
 		// Check if buffer is full
-		if(curpos[fifo] != BUFFER_MAX_SIZE){
-		
-			// Just to test reader wait from terminal
-			//wait_event_timeout(wq, 0, 10 * HZ);
-			printk("Wrote some bytes. bytes_written: %d  count: %d\n", bytes_written, count);
-					
+		if(curpos[fifo] != BUFFER_MAX_SIZE){					
 			buffer[fifo][curpos[fifo]] = *buf++;
 			curpos[fifo]++;
 			bytes_written++;
@@ -109,7 +101,7 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		
 		// Buffer full. Sleep and wait for reader.
 		else{
-			printk(KERN_INFO "Writer %d sleeping\n", minor);
+			printk(KERN_INFO "Fifo %d full. Writer sleeping\n", fifo);
 			wait_event_interruptible(wq, 
 					curpos[fifo] != BUFFER_MAX_SIZE);
 		}
