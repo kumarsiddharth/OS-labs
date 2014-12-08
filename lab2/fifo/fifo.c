@@ -93,6 +93,9 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	
 		// Check if buffer is full
 		if(curpos[fifo] != BUFFER_MAX_SIZE){
+		
+			// Just to test reader wait from terminal
+			wait_event_timeout(wq, 0, 10 * HZ);
 					
 			buffer[fifo][curpos[fifo]] = *buf++;
 			curpos[fifo]++;
