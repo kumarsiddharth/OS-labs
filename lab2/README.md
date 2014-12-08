@@ -14,6 +14,7 @@ praveenkumar.pendyala@stud.tu-darmstadt.de
 Member 2
 Lokesh Kumar Jamjoor Ramachandran
 2596208
+lokesh kumar.jamjoorramachandran@stud.tu-darmstadt.de
 
 
 Disclaimer
