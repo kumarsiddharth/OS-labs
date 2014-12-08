@@ -16,7 +16,7 @@
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 
 char buffer[FIFO_MAX_COUNT/2][BUFFER_MAX_SIZE];
-int running[FIFO_MAX_COUNT];
+int open[FIFO_MAX_COUNT];
 int curpos[FIFO_MAX_COUNT/2];
 
 MODULE_AUTHOR("Praveen Kumar Pendyala");
@@ -45,11 +45,10 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	if(curpos[fifo] == 0){
 		
 		// Sleep if the corresponding writer is writing
-		if(running[minor-1]){
+		if(open[minor-1]){
 			printk(KERN_INFO "Fifo %d is empty. Sleeping\n", fifo);
 			wait_event_interruptible(wq, 
-					running[minor-1] == 0 || 
-					curpos[fifo] != 0);			
+					open[minor-1] == 0 || curpos[fifo] != 0);			
 		}
 		
 		// If fifo empty even after wake up
@@ -90,19 +89,17 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	// Identify the fifo number
 	fifo = minor/2;
 	
-	// Signal writer running
-	running[minor] = 1;
-	
-	// Manual delay just for testing the reader wait for writter condition
-	wait_event_timeout(wq, 0, 10*HZ);
-	
 	while(bytes_written != count){
 	
 		// Check if buffer is full
 		if(curpos[fifo] != BUFFER_MAX_SIZE){
+					
 			buffer[fifo][curpos[fifo]] = *buf++;
 			curpos[fifo]++;
 			bytes_written++;
+			
+			// Signal readers waiting on this
+			wake_up_interruptible(&wq);
 		} 
 		
 		// Buffer full. Sleep and wait for reader.
@@ -114,9 +111,8 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		
 	}
 	
-	// Signal writer done and wake up any readers waiting on this
-	running[minor] = 0;
-	wake_up_interruptible(&wq);
+	// Signal writer wrote something and wake up any readers waiting on this
+	//wake_up_interruptible(&wq);
 	
 	printk("FIFO write called\n");
 	return bytes_written;
@@ -125,15 +121,27 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 // Open device call
 static int fifo_open(struct inode * inode, struct file * file)
 {
+	// Get minor number and set it as opened
+	int minor = MINOR(inode->i_rdev);
+	open[minor] = 1;
+	
 	printk("FIFO opened\n");
 	return 0;	
 }
 
-
-// Release clock for future operations
+// Release fifo device
 static int fifo_release(struct inode * inode, struct file * file)
 {
+	
+	// Get minor number and set it as closed
+	int minor = MINOR(inode->i_rdev);
+	open[minor] = 0;
+	
 	printk("FIFO released\n");
+	
+	// Trigger anyone waiting on this
+	wake_up_interruptible(&wq);
+	
 	return 0;
 }
 
