@@ -114,9 +114,6 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		
 	}
 	
-	// Signal writer wrote something and wake up any readers waiting on this
-	//wake_up_interruptible(&wq);
-	
 	printk("FIFO write called\n");
 	return bytes_written;
 }
