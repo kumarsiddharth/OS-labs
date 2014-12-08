@@ -46,7 +46,7 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 		
 		// Sleep if the corresponding writer is writing
 		if(open[minor-1]){
-			printk(KERN_INFO "Fifo %d is empty. Sleeping\n", fifo);
+			printk(KERN_INFO "Fifo %d empty. Reader sleeping\n", fifo);
 			wait_event_interruptible(wq, 
 					open[minor-1] == 0 || curpos[fifo] != 0);			
 		}
@@ -59,6 +59,7 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	}
 	
 	// Fifo has data. Read it.
+	printk(KERN_INFO "Reader read %d bytes\n", curpos[fifo]);
 	bytes_read = curpos[fifo];
 	copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
 	curpos[fifo] = 0;
@@ -95,7 +96,8 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		if(curpos[fifo] != BUFFER_MAX_SIZE){
 		
 			// Just to test reader wait from terminal
-			wait_event_timeout(wq, 0, 10 * HZ);
+			//wait_event_timeout(wq, 0, 10 * HZ);
+			printk("Wrote some bytes. bytes_written: %d  count: %d\n", bytes_written, count);
 					
 			buffer[fifo][curpos[fifo]] = *buf++;
 			curpos[fifo]++;
@@ -114,7 +116,7 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 		
 	}
 	
-	printk("FIFO write called\n");
+	printk("FIFO write done\n");
 	return bytes_written;
 }
 
@@ -154,7 +156,7 @@ static struct file_operations fifo_fops = {
 	.release =	fifo_release,
 };
 
-// Initialize clock device on insmod
+// Initialize fifo driver on insmod
 static int __init fifo_device_init(void)
 {	
 	int major;
@@ -169,7 +171,7 @@ static int __init fifo_device_init(void)
 	return 0;
 }
 
-// Remove clock device on rmmod
+// Remove fifo driver on rmmod
 static void __exit fifo_device_cleanup(void)
 {
 	unregister_chrdev(FIFO_MAJOR_NUM, FIFO_NAME);
