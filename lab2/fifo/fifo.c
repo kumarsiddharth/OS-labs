@@ -43,21 +43,31 @@ static ssize_t fifo_read(struct file *file, char *user_buf, size_t count,
 	
 	// Check if fifo is empty
 	if(curpos[fifo] == 0){
-		printk(KERN_INFO "Fifo %d is empty\n", fifo);
-		return 0;
+		
+		// Sleep if the corresponding writer is writing
+		if(running[minor-1]){
+			printk(KERN_INFO "Fifo %d is empty. Sleeping\n", fifo);
+			wait_event_interruptible(wq, 
+					running[minor-1] == 0 || 
+					curpos[fifo] != 0);			
+		}
+		
+		// If fifo empty even after wake up
+		if(curpos[fifo] == 0){
+			printk(KERN_INFO "Fifo %d is empty\n", fifo);
+			return 0;
+		}
 	}
 	
 	// Fifo has data. Read it.
-	else{
-		bytes_read = curpos[fifo];
-		copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
-		curpos[fifo] = 0;
-		
-		// Wake up any waiting processes
-		wake_up_interruptible(&wq);
-		
-		return bytes_read;
-	}
+	bytes_read = curpos[fifo];
+	copy_to_user(user_buf, buffer[fifo], sizeof(int)*curpos[fifo]);
+	curpos[fifo] = 0;
+	
+	// Wake up any waiting processes
+	wake_up_interruptible(&wq);
+	
+	return bytes_read;
 }
 
 // Write to fifo call
@@ -83,6 +93,9 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	// Signal writer running
 	running[minor] = 1;
 	
+	// Manual delay just for testing the reader wait for writter condition
+	wait_event_timeout(wq, 0, 10*HZ);
+	
 	while(bytes_written != count){
 	
 		// Check if buffer is full
@@ -103,8 +116,7 @@ static ssize_t fifo_write( struct file *file, const char *buf, size_t count,
 	
 	// Signal writer done and wake up any readers waiting on this
 	running[minor] = 0;
-	
-	// Wake up the reader, if any.
+	wake_up_interruptible(&wq);
 	
 	printk("FIFO write called\n");
 	return bytes_written;
