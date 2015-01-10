@@ -12,7 +12,6 @@ void add_item(int item){
 }
 
 char get_item(void){
-	printk("Item returned\n");
 	return 'c';
 }
 
