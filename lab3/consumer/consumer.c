@@ -7,6 +7,9 @@ MODULE_AUTHOR("Praveen Kumar Pendyala");
 MODULE_DESCRIPTION("Lab 3 Solution");
 MODULE_LICENSE("GPL");
 
+extern int get_item(int test);
+//extern void add_item(int item);
+
 #define WORK_QUEUE "consumer_work_queue"
 
 static struct workqueue_struct *wq;
@@ -15,6 +18,8 @@ static struct delayed_work c_task;
 static void consume_item(void *param){
 	printk("Consumed item\n");
 	queue_delayed_work(wq, &c_task, 2*HZ);
+	//add_item(3);
+	printk("Item got is : %d \n", get_item(1));
 }
 
 // Declare a delayed work

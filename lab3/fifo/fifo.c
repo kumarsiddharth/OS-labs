@@ -7,13 +7,13 @@ MODULE_AUTHOR("Praveen Kumar Pendyala");
 MODULE_DESCRIPTION("Lab 3 Solution");
 MODULE_LICENSE("GPL");
 
-static void add_item(int item){
+void add_item(int item){
 	printk("Item added\n");
 }
 
-static int get_item(){
-	printk("Item returned");
-	return 3;
+int get_item(int test){
+	printk("Item returned\n");
+	return test;
 }
 
 // initialize module (executed when using insmod)
@@ -27,6 +27,9 @@ static void __exit fifo_cleanup(void)
 {
 
 }
+
+//EXPORT_SYMBOL(add_item);
+EXPORT_SYMBOL( get_item );
 
 module_init(fifo_init);
 module_exit(fifo_cleanup);
