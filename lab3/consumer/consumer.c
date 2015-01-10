@@ -14,13 +14,14 @@ MODULE_DESCRIPTION("Lab 3 Solution");
 MODULE_LICENSE("GPL");
 
 static struct workqueue_struct *wq;
-static struct delayed_work c_task;
-static DECLARE_DELAYED_WORK(c_task, consume_item); // Declare the delayed task
+static struct delayed_work task;
 
-static void consume_item(void *param){
+static void consume_item(void){
 	printk("Item got is : %c \n", get_item());
-	queue_delayed_work(wq, &c_task, HZ / rate);
+	queue_delayed_work(wq, &task, HZ / rate);
 }
+
+static DECLARE_DELAYED_WORK(task, consume_item); // Declare the delayed task
 
 static int __init consumer_init(void)
 {
@@ -28,7 +29,7 @@ static int __init consumer_init(void)
 	wq = alloc_workqueue(WORK_QUEUE, WQ_UNBOUND, 1);
 
 	// Queue the delayed work into our work queue
-	queue_delayed_work(wq, &c_task, HZ / rate);
+	queue_delayed_work(wq, &task, HZ / rate);
 
 	return 0;	
 }
@@ -36,7 +37,7 @@ static int __init consumer_init(void)
 static void __exit consumer_cleanup(void)
 {
 	// Cancel the delayed work
-	cancel_delayed_work(&c_task);
+	cancel_delayed_work(&task);
 
 	// Destroy the workqueue
 	destroy_workqueue(wq);
