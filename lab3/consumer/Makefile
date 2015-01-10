@@ -1,8 +1,14 @@
+SRCS   = consumer.c ../fifo/fifo.c
+OBJS   = $(SRCS:.c=.o)
 
-obj-m += consumer.o
+obj-m += $(OBJS)
+
+EXTRA_CFLAGS = -O2
+
 
 all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+	$(MAKE) -C /lib/modules/`uname -r`/build M=$(PWD) modules
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	$(MAKE) -C /lib/modules/`uname -r`/build M=$(PWD) clean
+	$(RM) Module.markers modules.order
