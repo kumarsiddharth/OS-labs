@@ -1,46 +1,38 @@
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <linux/fs.h> // Can remove this
 #include <linux/workqueue.h> // we use workqueues
+
+static int rate = 1;
+module_param(rate, int, 0);
+
+#define WORK_QUEUE "consumer_work_queue"
+
+extern char get_item(void);
 
 MODULE_AUTHOR("Praveen Kumar Pendyala");
 MODULE_DESCRIPTION("Lab 3 Solution");
 MODULE_LICENSE("GPL");
 
-extern int get_item(int test);
-//extern void add_item(int item);
-
-#define WORK_QUEUE "consumer_work_queue"
-
 static struct workqueue_struct *wq;
 static struct delayed_work c_task;
+static DECLARE_DELAYED_WORK(c_task, consume_item); // Declare the delayed task
 
 static void consume_item(void *param){
-	printk("Consumed item\n");
-	queue_delayed_work(wq, &c_task, 2*HZ);
-	//add_item(3);
-	printk("Item got is : %d \n", get_item(1));
+	printk("Item got is : %c \n", get_item());
+	queue_delayed_work(wq, &c_task, HZ / rate);
 }
 
-// Declare a delayed work
-static DECLARE_DELAYED_WORK(c_task, consume_item);
-
-// initialize module (executed when using insmod)
 static int __init consumer_init(void)
 {
 	// Allocate a work queue - this gives context to run our tasks in.
 	wq = alloc_workqueue(WORK_QUEUE, WQ_UNBOUND, 1);
 
-	// Declare a delayed work scheduler - helps in scheduling task later.
-	//DECLARE_DELAYED_WORK(c_dwork, consume_item);
-
 	// Queue the delayed work into our work queue
-	queue_delayed_work(wq, &c_task, 2*HZ);
+	queue_delayed_work(wq, &c_task, HZ / rate);
 
 	return 0;	
 }
 
-// cleanup module (executed when using rmmod)
 static void __exit consumer_cleanup(void)
 {
 	// Cancel the delayed work

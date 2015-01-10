@@ -11,9 +11,9 @@ void add_item(int item){
 	printk("Item added\n");
 }
 
-int get_item(int test){
+char get_item(void){
 	printk("Item returned\n");
-	return test;
+	return 'c';
 }
 
 // initialize module (executed when using insmod)
