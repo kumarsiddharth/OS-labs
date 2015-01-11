@@ -7,7 +7,7 @@ static int item = 5;
 module_param(rate, int, 0);
 module_param(item, int, 0);
 
-#define WORK_QUEUE "consumer_work_queue"
+#define WORK_QUEUE "producer_work_queue"
 
 extern void add_item(int);
 
