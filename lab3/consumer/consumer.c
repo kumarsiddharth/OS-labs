@@ -7,7 +7,7 @@ module_param(rate, int, 0);
 
 #define WORK_QUEUE "consumer_work_queue"
 
-extern char get_item(void);
+extern int get_item(void);
 
 MODULE_AUTHOR("Praveen Kumar Pendyala");
 MODULE_DESCRIPTION("Lab 3 Solution");
@@ -17,7 +17,7 @@ static struct workqueue_struct *wq;
 static struct delayed_work task;
 
 static void consume_item(void){
-	printk("Item got is : %c \n", get_item());
+	printk("Item got is : %d \n", get_item());
 	queue_delayed_work(wq, &task, HZ / rate);
 }
 
