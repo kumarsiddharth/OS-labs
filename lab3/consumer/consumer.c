@@ -17,7 +17,7 @@ static struct workqueue_struct *wq;
 static struct delayed_work task;
 
 static void consume_item(void){
-	printk("Item got is : %d \n", get_item());
+	printk("Item received : %d \n", get_item());
 	queue_delayed_work(wq, &task, HZ / rate);
 }
 
