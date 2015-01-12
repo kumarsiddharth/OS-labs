@@ -27,6 +27,8 @@ static DECLARE_DELAYED_WORK(task, produce_item); // Declare the delayed task
 
 static int __init producer_init(void)
 {
+	printk("Producer loaded\n");
+
 	// Allocate a work queue - this gives context to run our tasks in.
 	wq = alloc_workqueue(WORK_QUEUE, WQ_UNBOUND, 1);
 
@@ -38,6 +40,8 @@ static int __init producer_init(void)
 
 static void __exit producer_cleanup(void)
 {
+	printk("Producer unloaded\n");
+
 	// Cancel the delayed work
 	cancel_delayed_work(&task);
 

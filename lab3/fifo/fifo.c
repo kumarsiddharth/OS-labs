@@ -32,7 +32,6 @@ void add_item(int item){
 
 int get_item(void){
 	int item;
-	
 	down(&full);
 	
 	down(&cr);
@@ -43,13 +42,13 @@ int get_item(void){
 	up(&cr);
 	
 	up(&empty);
-	
 	return item;
 }
 
 // initialize module (executed when using insmod)
 static int __init fifo_init(void)
 {
+	printk("Fifo loaded\n");
 	// Init semaphores
 	sema_init(&full, 0);
 	sema_init(&empty, BUFFER_SIZE);
@@ -60,7 +59,7 @@ static int __init fifo_init(void)
 // cleanup module (executed when using rmmod)
 static void __exit fifo_cleanup(void)
 {
-
+	printk("Fifo unloaded\n");
 }
 
 EXPORT_SYMBOL(add_item);

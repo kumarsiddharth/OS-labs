@@ -25,6 +25,8 @@ static DECLARE_DELAYED_WORK(task, consume_item); // Declare the delayed task
 
 static int __init consumer_init(void)
 {
+	printk("Consumer loaded\n");
+
 	// Allocate a work queue - this gives context to run our tasks in.
 	wq = alloc_workqueue(WORK_QUEUE, WQ_UNBOUND, 1);
 
@@ -36,6 +38,8 @@ static int __init consumer_init(void)
 
 static void __exit consumer_cleanup(void)
 {
+	printk("Consumer unloaded\n");
+
 	// Cancel the delayed work
 	cancel_delayed_work(&task);
 
